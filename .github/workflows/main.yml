@@ -65,4 +65,4 @@ jobs:
 
       - name: Ejecutar Bot
         run: |
-          python mainAuto.py -o "$ORIGEN" -d "$DESTINO" -f "$FECHA" -s "$SALIDA" -l "$LLEGADA" -t "$DURACION"
+          python -u mainAuto.py -o "$ORIGEN" -d "$DESTINO" -f "$FECHA" -s "$SALIDA" -l "$LLEGADA" -t "$DURACION"
