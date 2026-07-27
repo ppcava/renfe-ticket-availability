@@ -2,8 +2,7 @@ name: Renfe Sniper Bot
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
+    - cron: '*/15 * * * *'
 
 jobs:
   buscar-billetes:
