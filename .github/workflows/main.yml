@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       fecha:
-        description: 'Fecha del viaje (ej. 25-04-2026)'
+        description: 'Fecha del viaje (ej. 25/04/2026)'
         required: true
         type: string
       salida:
