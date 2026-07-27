@@ -1,59 +1,35 @@
 name: Renfe Sniper Bot
 
 on:
+  schedule:
+    - cron: '*/5 * * * *'
   workflow_dispatch:
-    inputs:
-      origen:
-        description: 'Estación de origen'
-        required: true
-        type: string
-      destino:
-        description: 'Estación de destino'
-        required: true
-        type: string
-      fecha:
-        description: 'Fecha del viaje (ej. 25/04/2026)'
-        required: true
-        type: string
-      salida:
-        description: 'Hora mínima de salida'
-        required: false
-        default: '00:00'
-        type: string
-      llegada:
-        description: 'Hora máxima de llegada'
-        required: false
-        default: '23:59'
-        type: string
-      duracion:
-        description: 'Duración máxima (en minutos)'
-        required: false
-        default: '9999'
-        type: string
 
 jobs:
   buscar-billetes:
     runs-on: ubuntu-latest
-    
+
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-      # Lee las contraseñas de Secrets
+      TZ: Europe/Madrid
+
+      # Secrets
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-      # Lee la configuración de los inputs manuales introducidos al lanzar el workflow
-      ORIGEN: ${{ inputs.origen }}
-      DESTINO: ${{ inputs.destino }}
-      FECHA: ${{ inputs.fecha }}
-      SALIDA: ${{ inputs.salida }}
-      LLEGADA: ${{ inputs.llegada }}
-      DURACION: ${{ inputs.duracion }}
-      TZ: 'Europe/Madrid' 
+
+      # Repository Variables
+      ORIGEN: ${{ vars.ORIGEN }}
+      DESTINO: ${{ vars.DESTINO }}
+      FECHA: ${{ vars.FECHA }}
+      SALIDA: ${{ vars.SALIDA }}
+      LLEGADA: ${{ vars.LLEGADA }}
+      DURACION: ${{ vars.DURACION }}
 
     steps:
       - name: Descargar código
         uses: actions/checkout@v4
 
-      - name: Instalar Python y Playwright
+      - name: Instalar Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
@@ -65,4 +41,10 @@ jobs:
 
       - name: Ejecutar Bot
         run: |
-          python -u run.py -o "$ORIGEN" -d "$DESTINO" -f "$FECHA" -s "$SALIDA" -l "$LLEGADA" -t "$DURACION"
+          python -u run.py \
+            -o "$ORIGEN" \
+            -d "$DESTINO" \
+            -f "$FECHA" \
+            -s "$SALIDA" \
+            -l "$LLEGADA" \
+            -t "$DURACION"
