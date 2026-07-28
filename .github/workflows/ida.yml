@@ -2,7 +2,7 @@ name: Renfe Sniper Bot
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 jobs:
@@ -18,12 +18,12 @@ jobs:
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
       # Repository Variables
-      ORIGEN: ${{ vars.ORIGEN }}
-      DESTINO: ${{ vars.DESTINO }}
-      FECHA: ${{ vars.FECHA }}
-      SALIDA: ${{ vars.SALIDA }}
-      LLEGADA: ${{ vars.LLEGADA }}
-      DURACION: ${{ vars.DURACION }}
+      ORIGEN: ${{ vars.IDA_ORIGEN }}
+      DESTINO: ${{ vars.IDA_DESTINO }}
+      FECHA: ${{ vars.IDA_FECHA }}
+      SALIDA: ${{ vars.IDA_SALIDA }}
+      LLEGADA: ${{ vars.IDA_LLEGADA }}
+      DURACION: ${{ vars.IDA_DURACION }}
 
     steps:
       - name: Descargar código
@@ -41,10 +41,13 @@ jobs:
 
       - name: Ejecutar Bot
         run: |
-          python -u run.py \
+          python -u run_auto.py \
             -o "$ORIGEN" \
             -d "$DESTINO" \
             -f "$FECHA" \
             -s "$SALIDA" \
             -l "$LLEGADA" \
-            -t "$DURACION"
+            -t "$DURACION" \
+            --intervalo-minimo 5 \
+            --intervalo-maximo 10 \
+            --max-minutos 45
