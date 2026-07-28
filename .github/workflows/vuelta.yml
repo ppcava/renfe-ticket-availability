@@ -1,4 +1,4 @@
-name: Renfe Sniper Bot
+name: Renfe Bot Vuelta
 
 on:
   schedule:
