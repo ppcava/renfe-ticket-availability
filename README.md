@@ -1,103 +1,242 @@
-# 🚄 Renfe Bot Ticket Availability
+# Renfe Bot
 
-Un bot de monitorización avanzada para billetes de Renfe (España) que utiliza **Playwright** para evadir bloqueos de seguridad y **Telegram** para enviarte notificaciones en tiempo real cuando se liberan plazas.
+Bot en Python que consulta billetes de Renfe y envía un aviso por Telegram cuando encuentra un tren que cumple los filtros configurados.
 
-Renfe utiliza sistemas anti-bot complejos (Akamai, telemetría activa y validación de sesión en Java). Este bot utiliza el **"Modo Cyborg"**: tú realizas la búsqueda inicial de forma humana para validar la sesión y el bot "intercepta" el tráfico de red para automatizar el escaneo indefinidamente con las credenciales reales.
+## Archivos
 
-## ¿Por qué este bot?
+- `run.py`: realiza una búsqueda y termina.
+- `run_auto.py`: repite la búsqueda hasta encontrar billetes o alcanzar el tiempo máximo.
+- `requirements.txt`: dependencias de Python.
+- `.env.example`: ejemplo de configuración local.
+- `.github/workflows/`: workflows de GitHub Actions para ida y vuelta.
 
-El principal fin de la creación de este bot es didáctico ya que nunca había hecho nada parecido y este era un caso sencillo para probar.
+## Requisitos
 
-El segundo incentivo, importante también, desde que se pusieron los billetes de media distancia gratis o con los abonos multiviaje que cancelas y te devuelven el viaje, es común encontrar trenes bloqueados por reservas masivas que terminan cancelandose a última hora, así con este bot no tengo que estar pendiente. (También se solucionaría este problema si cogiese los billetes con tiempo y no los dejase siempre para cuando faltan 2 días pero eso se me hace más difícil xd)
+- Python 3.10 o superior.
+- Un bot de Telegram.
 
+## Instalación local
 
+```bash
+git clone URL_DEL_REPOSITORIO
+cd NOMBRE_DEL_REPOSITORIO
 
-### Características
-- **Evade Akamai:** Al usar un navegador Chromium real, pasa los controles de telemetría.
-- **Filtros Inteligentes:**
-  - 🕒 Hora mínima de salida.
-  - 🏁 Hora máxima de llegada.
-  - ⏳ Duración máxima del trayecto.
-  - ♿ **Filtro Anti-H:** Ignora las plazas de Hándicap (Silla de ruedas) si así lo deseas.
-- **Notificaciones:** Mensajes detallados por Telegram con enlace directo a la web.
+python3 -m venv .venv
+source .venv/bin/activate
 
+pip install -r requirements.txt
+playwright install chromium
+```
 
+En Ubuntu, si faltan dependencias del sistema:
 
-##  Instalación
+```bash
+playwright install --with-deps chromium
+```
 
-1. **Clonar el repositorio:**
+## Configurar Telegram
 
-    git clone https://github.com/Tinogr3/renfe-ticket-availability.git
-   
-    cd renfe-ticket-availability
+### 1. Obtener `TELEGRAM_TOKEN`
 
-3. **Crear y activar entorno virtual:**
+1. Abre Telegram y busca el bot oficial `@BotFather`.
+2. Inicia la conversación y envía:
 
-    python3 -m venv venv
-   
-    source venv/bin/activate  # En Linux/macOS
-   
-    .\venv\Scripts\Activate.ps1 # En Windows
+```text
+/newbot
+```
 
-5. **Instalar dependencias:**
+3. Indica el nombre del bot.
+4. Indica un nombre de usuario único terminado en `bot`, por ejemplo `renfe_alertas_bot`.
+5. BotFather responderá con un token similar a:
 
-    pip install -r requirements.txt
-   
-    playwright install chromium
-   
+```text
+1234567890:AAEjemploDeToken
+```
 
+Ese valor es `TELEGRAM_TOKEN`. No lo publiques ni lo subas al repositorio.
 
-## Configuración Telegram
+### 2. Obtener `TELEGRAM_CHAT_ID`
 
-1. **Crea el bot:**
+1. Abre una conversación con el bot que acabas de crear.
+2. Pulsa **Start** o envíale cualquier mensaje.
+3. Abre esta URL en el navegador, sustituyendo `TOKEN` por el token real:
 
-    Busca a @BotFather en Telegram, escribe /newbot y sigue los pasos. Al final te dará un Token (algo como 712345678:AAH_ABC123...).
+```text
+https://api.telegram.org/botTOKEN/getUpdates
+```
 
-2. **Obten tu Chat ID:**
+Ejemplo:
 
-    Busca a @userinfobot en Telegram y envíale cualquier mensaje. Te responderá con tu Id numérico (ej. 12345678).
+```text
+https://api.telegram.org/bot1234567890:AAEjemploDeToken/getUpdates
+```
 
-3. **Inicia el Bot:**
+4. Busca en la respuesta JSON:
 
-    Entra en el chat de tu nuevo bot y dale a "Iniciar". Si no lo haces, el bot no tendrá permiso para escribirte.
+```json
+"chat": {
+  "id": 123456789
+}
+```
 
-4. **Pega las variables:**
+El número de `id` es `TELEGRAM_CHAT_ID`.
 
-    Pega el token y el chat ID en las variables del .env (elimina ".example")
-   
+Si `result` aparece vacío, vuelve a enviar un mensaje al bot y recarga la URL.
 
+Para usar un grupo, añade el bot al grupo, envía un mensaje y consulta de nuevo `getUpdates`. El identificador del grupo normalmente será negativo.
 
-## Uso
-Ejecuta el script pasando los filtros deseados:
+### 3. Configuración local
 
-También puedes usar "python main.py -h" para ver ayuda por terminal
+Copia el archivo de ejemplo:
 
-**Ejemplo: Solo trenes que salgan después de las 08:00, lleguen antes de las 22:00 y que no tarden más de 180 minutos (3 horas):**
-  
-    python main.py --salida 08:00 --llegada 22:00 --duracion 180
+```bash
+cp .env.example .env
+```
 
-Pasos del Modo Cyborg:
-Se abrirá una ventana de Chromium. 
+Contenido de `.env`:
 
-**Importante aceptar las cooquies nada más entrar**
+```env
+TELEGRAM_TOKEN=1234567890:AAEjemploDeToken
+TELEGRAM_CHAT_ID=123456789
+```
 
-Realiza la búsqueda manualmente (Origen, Destino y Fecha).
+El archivo `.env` no debe subirse a Git.
 
-Haz clic en "Buscar".
+## Ejecutar localmente
 
-En cuanto aparezcan los resultados, la terminal indicará [+] Petición interceptada.
+### Una búsqueda
 
-Ya puedes minimizar el navegador (¡no lo cierres!) y el bot se quedará vigilando por ti.
+```bash
+python -u run.py \
+  -o "MADRID" \
+  -d "VALENCIA" \
+  -f "15/08/2026" \
+  -s "08:00" \
+  -l "22:00" \
+  -t 180
+```
 
-## Uso Automatizado
-Modifica el run.sh con los parámetros de tu interés, asegurate de que los nombres sean correctos y ejecuta ./run.sh que llamará al mainAuto.py, o siempre puedes usarlo directamente e insertar parámetros en consola. Más util para ahorrar memoria ya que no tendrá que estar el navegador abierto constantemente pero fallará en el momento que modifiquen la web de renfe por eso dejo la opción manual también.
+### Búsqueda automática
 
-## Uso en la nube (Github Actions)
-Puedes hacer un fork del proyecto, usar el workflow ya creado que ejecuta un cron cada 5 minutos para hacer una única búsqueda, la web de renfe no lo hace pero esto evita bloqueos de ip. Tienes que configurar el token de telegram y tu chat id en los secrets del proyecto, los parámetros de búsqueda se introducen en campos desplegables al darle al boton de ejecutar workflow. ¡¡Cuidado con el número de minutos de uso gratuito de los que disponemos!!
+```bash
+python -u run_auto.py \
+  -o "MADRID" \
+  -d "VALENCIA" \
+  -f "15/08/2026" \
+  -s "08:00" \
+  -l "22:00" \
+  -t 180 \
+  --intervalo-minimo 5 \
+  --intervalo-maximo 10 \
+  --max-minutos 45
+```
 
+Argumentos:
 
+- `-o`: estación de origen.
+- `-d`: estación de destino.
+- `-f`: fecha en formato `DD/MM/AAAA`.
+- `-s`: hora mínima de salida en formato `HH:MM`.
+- `-l`: hora máxima de llegada en formato `HH:MM`.
+- `-t`: duración máxima en minutos.
+- `--intervalo-minimo`: espera mínima entre búsquedas.
+- `--intervalo-maximo`: espera máxima entre búsquedas.
+- `--max-minutos`: duración máxima del proceso automático.
 
-## ⚠️ Descargo de Responsabilidad
-Este proyecto ha sido creado con fines educativos y de aprendizaje sobre automatización web. El uso de bots puede violar los términos de servicio de Renfe. Utilízalo de forma responsable y bajo tu propia cuenta y riesgo. El autor no se hace responsable del uso que se le dé a esta herramienta.
+## Configurar GitHub Actions
 
-Hecho con ❤️ por Tinogr3
+El repositorio tiene dos workflows:
+
+- **Renfe Bot Ida**: se programa en el minuto 17 de cada hora.
+- **Renfe Bot Vuelta**: se programa en el minuto 27 de cada hora.
+
+Cada workflow ejecuta `run_auto.py` durante un máximo de 45 minutos y consulta cada 5-10 minutos. También puede iniciarse manualmente desde **Actions > workflow > Run workflow**.
+
+Los cron de GitHub Actions se evalúan en UTC. `TZ: Europe/Madrid` configura la zona horaria del proceso, pero no cambia la hora del cron.
+
+### Secrets
+
+En el repositorio, entra en:
+
+```text
+Settings > Secrets and variables > Actions > Secrets
+```
+
+Crea estos dos **Repository secrets**:
+
+```text
+TELEGRAM_TOKEN
+TELEGRAM_CHAT_ID
+```
+
+Usa los valores obtenidos en la sección anterior.
+
+### Variables de ida
+
+Entra en:
+
+```text
+Settings > Secrets and variables > Actions > Variables
+```
+
+Crea estas **Repository variables**:
+
+```text
+IDA_ORIGEN
+IDA_DESTINO
+IDA_FECHA
+IDA_SALIDA
+IDA_LLEGADA
+IDA_DURACION
+```
+
+Ejemplo:
+
+```text
+IDA_ORIGEN=MADRID
+IDA_DESTINO=VALENCIA
+IDA_FECHA=15/08/2026
+IDA_SALIDA=08:00
+IDA_LLEGADA=22:00
+IDA_DURACION=180
+```
+
+### Variables de vuelta
+
+Crea también:
+
+```text
+VUELTA_ORIGEN
+VUELTA_DESTINO
+VUELTA_FECHA
+VUELTA_SALIDA
+VUELTA_LLEGADA
+VUELTA_DURACION
+```
+
+Ejemplo:
+
+```text
+VUELTA_ORIGEN=VALENCIA
+VUELTA_DESTINO=MADRID
+VUELTA_FECHA=20/08/2026
+VUELTA_SALIDA=08:00
+VUELTA_LLEGADA=22:00
+VUELTA_DURACION=180
+```
+
+## Probar la configuración
+
+1. Abre la pestaña **Actions** del repositorio.
+2. Selecciona **Renfe Bot Ida** o **Renfe Bot Vuelta**.
+3. Pulsa **Run workflow**.
+4. Revisa el log del paso **Ejecutar Bot**.
+
+Si no llega el aviso de Telegram, comprueba el token, el chat ID y que hayas iniciado una conversación con el bot.
+
+## Importante
+
+- No subas `.env` ni el token de Telegram.
+- Actualiza `IDA_FECHA` y `VUELTA_FECHA` cuando cambien los viajes.
+- El bot solo avisa: no compra billetes.
+- La web de Renfe puede cambiar y romper los selectores utilizados por Playwright.
