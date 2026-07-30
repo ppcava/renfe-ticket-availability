@@ -50,4 +50,4 @@ jobs:
             -t "$DURACION" \
             --intervalo-minimo 5 \
             --intervalo-maximo 10 \
-            --max-minutos 45
+            --max-minutos 120
