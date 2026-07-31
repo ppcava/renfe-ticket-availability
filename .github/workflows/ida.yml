@@ -49,5 +49,5 @@ jobs:
             -l "$LLEGADA" \
             -t "$DURACION" \
             --intervalo-minimo 5 \
-            --intervalo-maximo 10 \
-            --max-minutos 120
+            --intervalo-maximo 8 \
+            --max-minutos 150
